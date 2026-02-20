@@ -1,0 +1,166 @@
+@page "/behavior/page-detail"
+@implements IDisposable
+
+<PageTitle>Page Details - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Page Details</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (!string.IsNullOrEmpty(_pageUrl))
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Analyzing Page:</MudText>
+        <MudText Typo="Typo.body1" Class="mb-2">@_pageUrl</MudText>
+    </MudPaper>
+}
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null)
+{
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_data.PageViews.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Page Views</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Visibility" Color="Color.Primary" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_data.UniquePageViews.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Unique Page Views</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Person" Color="Color.Info" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_data.Entries.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Entries</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Input" Color="Color.Success" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_data.Exits.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Exits</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ExitToApp" Color="Color.Error" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Engagement Metrics</MudText>
+        <MudStack Spacing="3">
+            <MudStack Row="true" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.body1"><strong>Bounce Rate:</strong></MudText>
+                <MudText Typo="Typo.body1">@_data.BounceRate.ToString("F1")%</MudText>
+            </MudStack>
+            <MudStack Row="true" Justify="Justify.SpaceBetween">
+                <MudText Typo="Typo.body1"><strong>Avg. Time on Page:</strong></MudText>
+                <MudText Typo="Typo.body1">@TimeSpan.FromSeconds(_data.AverageTimeOnPageSeconds).ToString(@"mm\:ss")</MudText>
+            </MudStack>
+        </MudStack>
+    </MudPaper>
+
+    @if (_data.Trend?.Any() == true)
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Daily Traffic</MudText>
+            <MudChart ChartType="ChartType.Line" 
+                      ChartSeries="@_chartSeries"
+                      XAxisLabels="@_xAxisLabels"
+                      Width="100%" Height="300px" />
+        </MudPaper>
+    }
+
+    @if (_data.Acquisition?.Any() == true)
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Acquisition for this Page</MudText>
+            <MudChart ChartType="ChartType.Donut" 
+                      InputData="@_data.Acquisition.Select(x => (double)x.Sessions).ToArray()"
+                      InputLabels="@_data.Acquisition.Select(x => x.Source).ToArray()"
+                      Width="100%" Height="300px" />
+            <MudDataGrid Items="@_data.Acquisition" Hover="true" Dense="true" Class="mt-4">
+                <Columns>
+                    <PropertyColumn Property="x => x.Source" Title="Source" />
+                    <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+                    <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+                    <PropertyColumn Property="x => x.BounceRate" Title="Bounce Rate (%)" Format="F1" />
+                </Columns>
+            </MudDataGrid>
+        </MudPaper>
+    }
+
+    @if (_data.PreviousPages?.Any() == true)
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Previous Pages</MudText>
+            <MudDataGrid Items="@_data.PreviousPages" Hover="true" Dense="true">
+                <Columns>
+                    <TemplateColumn Title="URL">
+                        <CellTemplate>
+                            <MudLink Href="@($"/behavior/page-detail?url={Uri.EscapeDataString(context.Item.Url)}")" Color="Color.Primary">
+                                @context.Item.Url
+                            </MudLink>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+                </Columns>
+            </MudDataGrid>
+        </MudPaper>
+    }
+
+    @if (_data.NextPages?.Any() == true)
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Next Pages</MudText>
+            <MudDataGrid Items="@_data.NextPages" Hover="true" Dense="true">
+                <Columns>
+                    <TemplateColumn Title="URL">
+                        <CellTemplate>
+                            <MudLink Href="@($"/behavior/page-detail?url={Uri.EscapeDataString(context.Item.Url)}")" Color="Color.Primary">
+                                @context.Item.Url
+                            </MudLink>
+                        </CellTemplate>
+                    </TemplateColumn>
+                    <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+                </Columns>
+            </MudDataGrid>
+        </MudPaper>
+    }
+
+    @if (!string.IsNullOrEmpty(_data.NextPageUrl))
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Top Next Page</MudText>
+            <MudStack Spacing="2">
+                <MudText Typo="Typo.body1"><strong>Most Common Next Page:</strong></MudText>
+                <MudLink Href="@($"/behavior/page-detail?url={Uri.EscapeDataString(_data.NextPageUrl)}")" Color="Color.Secondary">
+                    @_data.NextPageUrl
+                </MudLink>
+                <MudText Typo="Typo.body2">Views: @_data.NextPageViews.ToString("N0")</MudText>
+            </MudStack>
+        </MudPaper>
+    }
+}
+else
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudAlert Severity="Severity.Info">
+            Please select a page to view its details. Navigate to the Pages section and click on a page URL.
+        </MudAlert>
+    </MudPaper>
+}

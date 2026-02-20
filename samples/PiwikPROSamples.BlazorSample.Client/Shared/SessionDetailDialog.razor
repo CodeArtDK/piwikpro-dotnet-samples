@@ -1,0 +1,193 @@
+@using PiwikPROSamples.BlazorSample.Client.Models
+
+<MudDialog>
+    <DialogContent>
+        @if (Session != null)
+        {
+            <MudGrid Spacing="3">
+                <!-- Session Overview -->
+                <MudItem xs="12">
+                    <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                        <MudText Typo="Typo.h6" GutterBottom="true">Session Overview</MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Session ID</MudText>
+                                <MudText Typo="Typo.body1" Style="font-family: monospace; word-break: break-all;">@Session.SessionId</MudText>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Visitor ID</MudText>
+                                <MudText Typo="Typo.body1" Style="font-family: monospace; word-break: break-all;">@Session.VisitorId</MudText>
+                            </MudItem>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Timestamp</MudText>
+                                <MudText Typo="Typo.body1">@Session.Timestamp?.ToString("yyyy-MM-dd HH:mm:ss")</MudText>
+                            </MudItem>
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Traffic Source -->
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                        <MudText Typo="Typo.h6" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Traffic" Size="Size.Small" Class="mr-2" />
+                            Traffic Source
+                        </MudText>
+                        <MudStack Spacing="2">
+                            <div>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Source</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Info">@Session.Source</MudChip>
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Medium</MudText>
+                                <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@Session.Medium</MudChip>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Session.CampaignName))
+                            {
+                                <div>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">Campaign</MudText>
+                                    <MudText Typo="Typo.body1">@Session.CampaignName</MudText>
+                                </div>
+                            }
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Device Information -->
+                <MudItem xs="12" md="6">
+                    <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                        <MudText Typo="Typo.h6" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Class="mr-2" />
+                            Device Information
+                        </MudText>
+                        <MudStack Spacing="2">
+                            <div>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Device Type</MudText>
+                                <MudText Typo="Typo.body1">
+                                    @if (Session.DeviceType.Contains("Desktop", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Primary" Class="mr-1" />
+                                    }
+                                    else if (Session.DeviceType.Contains("Mobile", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.Smartphone" Size="Size.Small" Color="Color.Success" Class="mr-1" />
+                                    }
+                                    else if (Session.DeviceType.Contains("Tablet", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <MudIcon Icon="@Icons.Material.Filled.TabletMac" Size="Size.Small" Color="Color.Warning" Class="mr-1" />
+                                    }
+                                    @Session.DeviceType
+                                </MudText>
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Browser</MudText>
+                                <MudText Typo="Typo.body1">@Session.Browser</MudText>
+                            </div>
+                            <div>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Operating System</MudText>
+                                <MudText Typo="Typo.body1">@Session.OperatingSystem</MudText>
+                            </div>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Geographic Information -->
+                <MudItem xs="12">
+                    <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                        <MudText Typo="Typo.h6" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.LocationOn" Size="Size.Small" Class="mr-2" />
+                            Geographic Information
+                        </MudText>
+                        <MudGrid>
+                            <MudItem xs="12" md="6">
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">Country</MudText>
+                                <MudText Typo="Typo.body1">@Session.Country</MudText>
+                            </MudItem>
+                            @if (!string.IsNullOrEmpty(Session.City) && Session.City != "N/A")
+                            {
+                                <MudItem xs="12" md="6">
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">City</MudText>
+                                    <MudText Typo="Typo.body1">@Session.City</MudText>
+                                </MudItem>
+                            }
+                        </MudGrid>
+                    </MudPaper>
+                </MudItem>
+
+                <!-- Events Timeline -->
+                <MudItem xs="12">
+                    <MudPaper Elevation="0" Class="pa-3" Style="background-color: var(--mud-palette-background-grey);">
+                        <MudText Typo="Typo.h6" GutterBottom="true">
+                            <MudIcon Icon="@Icons.Material.Filled.Timeline" Size="Size.Small" Class="mr-2" />
+                            Session Events Timeline
+                        </MudText>
+                        @if (_loadingEvents)
+                        {
+                            <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-2" />
+                        }
+                        else if (!string.IsNullOrEmpty(_errorMessage))
+                        {
+                            <MudAlert Severity="Severity.Error" Class="mt-2">@_errorMessage</MudAlert>
+                        }
+                        else if (_events != null && _events.Any())
+                        {
+                            <MudTimeline TimelineOrientation="TimelineOrientation.Vertical" TimelinePosition="TimelinePosition.Start">
+                                @foreach (var evt in _events)
+                                {
+                                    <MudTimelineItem Color="Color.Info" Size="Size.Small">
+                                        <ItemOpposite>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                                                @evt.Timestamp?.ToString("yyyy-MM-dd")
+                                            </MudText>
+                                            <MudText Typo="Typo.body1" Color="Color.Primary">
+                                                <strong>@evt.Timestamp?.ToString("HH:mm:ss")</strong>
+                                            </MudText>
+                                        </ItemOpposite>
+                                        <ItemContent>
+                                            <MudText Typo="Typo.body1">
+                                                <strong>@evt.EventType</strong>
+                                            </MudText>
+                                            @if (!string.IsNullOrEmpty(evt.EventUrl))
+                                            {
+                                                <MudText Typo="Typo.body2" Color="Color.Secondary" Style="word-break: break-all;">
+                                                    @evt.EventUrl
+                                                </MudText>
+                                            }
+                                            @if (!string.IsNullOrEmpty(evt.EventName))
+                                            {
+                                                <MudText Typo="Typo.body2">@evt.EventName</MudText>
+                                            }
+                                            @if (!string.IsNullOrEmpty(evt.EventAction) || !string.IsNullOrEmpty(evt.EventCategory))
+                                            {
+                                                <MudText Typo="Typo.caption" Color="Color.Secondary">
+                                                    @if (!string.IsNullOrEmpty(evt.EventCategory))
+                                                    {
+                                                        <span>Category: @evt.EventCategory</span>
+                                                    }
+                                                    @if (!string.IsNullOrEmpty(evt.EventAction))
+                                                    {
+                                                        <span> | Action: @evt.EventAction</span>
+                                                    }
+                                                </MudText>
+                                            }
+                                        </ItemContent>
+                                    </MudTimelineItem>
+                                }
+                            </MudTimeline>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">
+                                No events found for this session
+                            </MudText>
+                        }
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        }
+        else
+        {
+            <MudText>No session data available</MudText>
+        }
+    </DialogContent>
+</MudDialog>

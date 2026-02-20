@@ -1,0 +1,52 @@
+@page "/visitors/engagement"
+@implements IDisposable
+
+<PageTitle>Visitor Engagement - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Visitor Engagement</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null && _data.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Session Duration Distribution</MudText>
+        <MudDataGrid Items="@_data" Filterable="false" SortMode="SortMode.None" 
+                     Hover="true" Dense="true">
+            <Columns>
+                <PropertyColumn Property="x => x.TimeRange" Title="Time Range" />
+                <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+                <PropertyColumn Property="x => x.Percentage" Title="Percentage">
+                    <CellTemplate>
+                        @context.Item.Percentage.ToString("F1")%
+                    </CellTemplate>
+                </PropertyColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Session Duration (Bar Chart)</MudText>
+                <MudChart ChartType="ChartType.Bar" 
+                          ChartSeries="@_barChartSeries"
+                          XAxisLabels="@_xAxisLabels"
+                          Width="100%" Height="350px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Session Duration (Pie Chart)</MudText>
+                <MudChart ChartType="ChartType.Pie" 
+                          InputData="@_data.Select(x => (double)x.Sessions).ToArray()"
+                          InputLabels="@_data.Select(x => x.TimeRange).ToArray()"
+                          Width="100%" Height="350px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

@@ -1,0 +1,14 @@
+<Solution>
+  <Folder Name="/Docs/">
+    <File Path="docs/analytics-queries.md" />
+    <File Path="docs/goals-api.md" />
+    <File Path="docs/sessions-api.md" />
+    <File Path="docs/tracking-api.md" />
+    <File Path="README.md" />
+  </Folder>
+  <Folder Name="/samples/">
+    <Project Path="samples/PiwikPROSamples.BlazorSample.Server/PiwikPROSamples.BlazorSample.Server.csproj" />
+    <Project Path="samples/PiwikPROSamples.BlazorSample.Client/PiwikPROSamples.BlazorSample.Client.csproj" />
+    <Project Path="samples/PiwikPROSamples.ConsoleSample/PiwikPROSamples.ConsoleSample.csproj" />
+  </Folder>
+</Solution>

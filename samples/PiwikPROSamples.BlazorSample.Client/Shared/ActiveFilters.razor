@@ -1,0 +1,58 @@
+@using PiwikPROSamples.BlazorSample.Client.Models
+@using PiwikPROSamples.BlazorSample.Client.Services
+@inject IFilterStateService FilterState
+@implements IDisposable
+
+@if (_filters.Any())
+{
+    <MudPaper Class="pa-2 mb-2" Elevation="0">
+        <MudText Typo="Typo.caption" Class="mb-1">Active Filters:</MudText>
+        <div class="d-flex flex-wrap gap-1">
+            @foreach (var filter in _filters)
+            {
+                <MudChip T="string" Size="Size.Small" 
+                         Color="Color.Primary" 
+                         OnClose="@(() => RemoveFilter(filter))"
+                         Text="@filter.DisplayName" />
+            }
+            @if (_filters.Count > 1)
+            {
+                <MudChip T="string" Size="Size.Small" 
+                         Color="Color.Error" 
+                         OnClose="ClearAllFilters"
+                         Text="Clear All" />
+            }
+        </div>
+    </MudPaper>
+}
+
+@code {
+    private List<DimensionalFilter> _filters = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _filters = await FilterState.GetFiltersAsync();
+        FilterState.OnFilterChanged += OnFiltersChanged;
+    }
+
+    private async void OnFiltersChanged()
+    {
+        _filters = await FilterState.GetFiltersAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task RemoveFilter(DimensionalFilter filter)
+    {
+        await FilterState.RemoveFilterAsync(filter);
+    }
+
+    private async Task ClearAllFilters()
+    {
+        await FilterState.ClearFiltersAsync();
+    }
+
+    public void Dispose()
+    {
+        FilterState.OnFilterChanged -= OnFiltersChanged;
+    }
+}

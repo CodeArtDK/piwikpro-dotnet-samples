@@ -1,0 +1,137 @@
+@page "/settings"
+@using PiwikPROSamples.BlazorSample.Client.Models
+@using PiwikPROSamples.BlazorSample.Client.Services
+@inject IConnectionStateService ConnectionStateService
+@inject IAppSettingsService AppSettingsService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Settings - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Settings</MudText>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" Class="mb-4">Server Timezone</MudText>
+        <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mb-3">
+            Set the timezone of your Piwik Pro server for accurate real-time data display.
+        </MudText>
+        <MudSelect T="int" Value="_serverTimezoneOffset" ValueChanged="OnTimezoneChanged" 
+                   Label="Server Timezone (UTC offset)" Variant="Variant.Outlined" Style="max-width: 300px;">
+            <MudSelectItem Value="@(-12)">UTC-12</MudSelectItem>
+            <MudSelectItem Value="@(-11)">UTC-11</MudSelectItem>
+            <MudSelectItem Value="@(-10)">UTC-10</MudSelectItem>
+            <MudSelectItem Value="@(-9)">UTC-9</MudSelectItem>
+            <MudSelectItem Value="@(-8)">UTC-8</MudSelectItem>
+            <MudSelectItem Value="@(-7)">UTC-7</MudSelectItem>
+            <MudSelectItem Value="@(-6)">UTC-6</MudSelectItem>
+            <MudSelectItem Value="@(-5)">UTC-5</MudSelectItem>
+            <MudSelectItem Value="@(-4)">UTC-4</MudSelectItem>
+            <MudSelectItem Value="@(-3)">UTC-3</MudSelectItem>
+            <MudSelectItem Value="@(-2)">UTC-2</MudSelectItem>
+            <MudSelectItem Value="@(-1)">UTC-1</MudSelectItem>
+            <MudSelectItem Value="@(0)">UTC+0</MudSelectItem>
+            <MudSelectItem Value="@(1)">UTC+1</MudSelectItem>
+            <MudSelectItem Value="@(2)">UTC+2</MudSelectItem>
+            <MudSelectItem Value="@(3)">UTC+3</MudSelectItem>
+            <MudSelectItem Value="@(4)">UTC+4</MudSelectItem>
+            <MudSelectItem Value="@(5)">UTC+5</MudSelectItem>
+            <MudSelectItem Value="@(6)">UTC+6</MudSelectItem>
+            <MudSelectItem Value="@(7)">UTC+7</MudSelectItem>
+            <MudSelectItem Value="@(8)">UTC+8</MudSelectItem>
+            <MudSelectItem Value="@(9)">UTC+9</MudSelectItem>
+            <MudSelectItem Value="@(10)">UTC+10</MudSelectItem>
+            <MudSelectItem Value="@(11)">UTC+11</MudSelectItem>
+            <MudSelectItem Value="@(12)">UTC+12</MudSelectItem>
+        </MudSelect>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-4">
+            <MudText Typo="Typo.h6">PiwikPRO Connections</MudText>
+            <MudButton 
+                Variant="Variant.Filled" 
+                Color="Color.Primary" 
+                StartIcon="@Icons.Material.Filled.Add"
+                OnClick="AddConnection">
+                Add Connection
+            </MudButton>
+        </MudStack>
+
+        @if (_connections == null || !_connections.Any())
+        {
+            <MudAlert Severity="Severity.Info">
+                No connections configured. Click "Add Connection" to get started.
+            </MudAlert>
+        }
+        else
+        {
+            <MudTable Items="_connections" Hover="true" Breakpoint="Breakpoint.Sm">
+                <HeaderContent>
+                    <MudTh>Name</MudTh>
+                    <MudTh>Base URL</MudTh>
+                    <MudTh>Website ID</MudTh>
+                    <MudTh>Status</MudTh>
+                    <MudTh>Actions</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="Name">
+                        @context.Name
+                        @if (context.Id == _activeConnectionId)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Success" Class="ml-2">Active</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Base URL">@context.BaseUrl</MudTd>
+                    <MudTd DataLabel="Website ID">
+                        @if (string.IsNullOrEmpty(context.WebSiteId))
+                        {
+                            <MudText Typo="Typo.body2" Color="Color.Default">Not set</MudText>
+                        }
+                        else
+                        {
+                            <MudText Typo="Typo.body2">@context.WebSiteId</MudText>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Status">
+                        @if (context.IsDefault)
+                        {
+                            <MudChip T="string" Size="Size.Small" Color="Color.Primary">Default</MudChip>
+                        }
+                    </MudTd>
+                    <MudTd DataLabel="Actions">
+                        <MudStack Row="true" Spacing="1">
+                            @if (context.Id != _activeConnectionId)
+                            {
+                                <MudIconButton 
+                                    Icon="@Icons.Material.Filled.CheckCircle" 
+                                    Color="Color.Success" 
+                                    Size="Size.Small"
+                                    OnClick="@(() => SetActiveConnection(context.Id))"
+                                    title="Set as active" />
+                            }
+                            <MudIconButton 
+                                Icon="@Icons.Material.Filled.Edit" 
+                                Color="Color.Primary" 
+                                Size="Size.Small"
+                                OnClick="@(() => EditConnection(context.Id))"
+                                title="Edit" />
+                            <MudIconButton 
+                                Icon="@Icons.Material.Filled.Delete" 
+                                Color="Color.Error" 
+                                Size="Size.Small"
+                                OnClick="@(() => DeleteConnection(context))"
+                                title="Delete" />
+                        </MudStack>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        }
+    </MudPaper>
+}

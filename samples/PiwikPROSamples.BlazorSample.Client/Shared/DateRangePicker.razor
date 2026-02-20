@@ -1,0 +1,69 @@
+<MudPaper Class="pa-4 mb-4">
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker Label="Start Date" @bind-Date="StartDate" />
+        </MudItem>
+        <MudItem xs="12" sm="6" md="4">
+            <MudDatePicker Label="End Date" @bind-Date="EndDate" />
+        </MudItem>
+        <MudItem xs="12" sm="12" md="4">
+            <MudButtonGroup OverrideStyles="false">
+                <MudButton OnClick="@(() => SetDateRange(7))" Variant="Variant.Outlined">Last 7 Days</MudButton>
+                <MudButton OnClick="@(() => SetDateRange(30))" Variant="Variant.Outlined">Last 30 Days</MudButton>
+                <MudButton OnClick="@(() => SetDateRange(90))" Variant="Variant.Outlined">Last 90 Days</MudButton>
+            </MudButtonGroup>
+        </MudItem>
+    </MudGrid>
+    <ActiveFilters />
+</MudPaper>
+
+@code {
+    private DateTime? _startDate = DateTime.Now.AddDays(-30);
+    private DateTime? _endDate = DateTime.Now;
+
+    [Parameter]
+    public DateTime? StartDate 
+    { 
+        get => _startDate;
+        set
+        {
+            if (_startDate != value)
+            {
+                _startDate = value;
+                InvokeAsync(NotifyDateRangeChanged);
+            }
+        }
+    }
+
+    [Parameter]
+    public DateTime? EndDate 
+    { 
+        get => _endDate;
+        set
+        {
+            if (_endDate != value)
+            {
+                _endDate = value;
+                InvokeAsync(NotifyDateRangeChanged);
+            }
+        }
+    }
+
+    [Parameter]
+    public EventCallback<(DateTime start, DateTime end)> OnDateRangeChanged { get; set; }
+
+    private async Task NotifyDateRangeChanged()
+    {
+        if (_startDate.HasValue && _endDate.HasValue)
+        {
+            await OnDateRangeChanged.InvokeAsync((_startDate.Value, _endDate.Value));
+        }
+    }
+
+    private async Task SetDateRange(int days)
+    {
+        _endDate = DateTime.Now;
+        _startDate = DateTime.Now.AddDays(-days);
+        await NotifyDateRangeChanged();
+    }
+}

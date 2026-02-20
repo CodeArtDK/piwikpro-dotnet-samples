@@ -1,0 +1,242 @@
+@page "/realtime"
+@using PiwikPROSamples.BlazorSample.Client.Models
+@using PiwikPROSamples.BlazorSample.Client.Services
+
+<PageTitle>Real-Time Events - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Real-Time Events</MudText>
+<MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+    Monitor live traffic and events as they happen (last 60 minutes, recommended 3-60 min old)
+</MudText>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4">
+    <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+        <MudText Typo="Typo.h6">Time Range & Refresh</MudText>
+        @if (_lastRefreshTime.HasValue)
+        {
+            <MudText Typo="Typo.caption" Color="Color.Secondary">
+                Last refresh: @_lastRefreshTime.Value.ToString("HH:mm:ss")
+                @if (_isCountingDown && _autoRefresh)
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="ml-2">Next in @_autoRefreshCountdown s</MudChip>
+                }
+            </MudText>
+        }
+    </MudStack>
+    
+    <MudGrid>
+        <MudItem xs="12" sm="4">
+            <MudSelect T="int" Value="_timeRange" ValueChanged="OnTimeRangeChanged" Label="Time Range" Variant="Variant.Outlined">
+                <MudSelectItem Value="@(5)">Last 5 minutes</MudSelectItem>
+                <MudSelectItem Value="@(10)">Last 10 minutes</MudSelectItem>
+                <MudSelectItem Value="@(15)">Last 15 minutes</MudSelectItem>
+                <MudSelectItem Value="@(30)">Last 30 minutes</MudSelectItem>
+                <MudSelectItem Value="@(60)">Last 60 minutes</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudSwitch T="bool" Value="_autoRefresh" ValueChanged="OnAutoRefreshToggled" Color="Color.Primary" 
+                       Label="@($"Auto-refresh (every {AutoRefreshIntervalSeconds}s)")" />
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData" FullWidth="true" Disabled="_loading">
+                <MudIcon Icon="@Icons.Material.Filled.Refresh" Class="mr-2" /> Refresh Now
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+        Server timezone: UTC@(_serverTimezoneOffset >= 0 ? "+" : "")@_serverTimezoneOffset (configured in <MudLink Href="/settings">Settings</MudLink>)
+    </MudText>
+</MudPaper>
+
+<MudPaper Elevation="2" Class="pa-4 mb-4">
+    <MudText Typo="Typo.h6" Class="mb-3">Filter Builder
+        @if (_filters.Any())
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="ml-2">@_filters.Count active</MudChip>
+        }
+    </MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="4">
+            <MudSelect T="string" @bind-Value="_filterDimension" Label="Dimension" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("event_type")">Event Type</MudSelectItem>
+                <MudSelectItem Value="@("event_url")">Event URL</MudSelectItem>
+                <MudSelectItem Value="@("source")">Source</MudSelectItem>
+                <MudSelectItem Value="@("medium")">Medium</MudSelectItem>
+                <MudSelectItem Value="@("device_type")">Device Type</MudSelectItem>
+                <MudSelectItem Value="@("browser_name")">Browser</MudSelectItem>
+                <MudSelectItem Value="@("location_country_name")">Country</MudSelectItem>
+                <MudSelectItem Value="@("location_city_name")">City</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudSelect T="string" @bind-Value="_filterOperator" Label="Operator" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("eq")">Equals</MudSelectItem>
+                <MudSelectItem Value="@("neq")">Not Equals</MudSelectItem>
+                <MudSelectItem Value="@("starts_with")">Starts With</MudSelectItem>
+                <MudSelectItem Value="@("ends_with")">Ends With</MudSelectItem>
+                <MudSelectItem Value="@("contains")">Contains</MudSelectItem>
+                <MudSelectItem Value="@("matches")">Matches (regex)</MudSelectItem>
+                <MudSelectItem Value="@("not_matches")">Not Matches (regex)</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudTextField @bind-Value="_filterValue" Label="Value" Variant="Variant.Outlined" Placeholder="Enter filter value" />
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddFilter" FullWidth="true" Disabled="@(string.IsNullOrWhiteSpace(_filterDimension) || string.IsNullOrWhiteSpace(_filterValue))">
+                <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    
+    @if (_filters.Any())
+    {
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3" Spacing="2">
+            @foreach (var filter in _filters)
+            {
+                <MudChip T="string" Color="Color.Primary" OnClose="@(() => RemoveFilter(filter))" Variant="Variant.Filled">
+                    @GetDimensionDisplayName(filter.Dimension) @FilterOperators.GetDisplayName(filter.Operator) "@filter.Value"
+                </MudChip>
+            }
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="ClearFilters" Size="Size.Small">
+                Clear All
+            </MudButton>
+        </MudStack>
+    }
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">
+        @_errorMessage
+    </MudAlert>
+}
+else if (_events != null && _events.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+            <MudText Typo="Typo.h6">Live Events (@_events.Count)
+                @if (_filters.Any())
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@_filters.Count filter(s) applied</MudChip>
+                }
+            </MudText>
+            <MudNumericField @bind-Value="_limit" Label="Limit" Variant="Variant.Outlined" 
+                             Min="10" Max="500" Step="10" Style="width: 120px;" />
+        </MudStack>
+
+        <MudTable Items="@_events" Hover="true" Striped="true" Dense="true" 
+                  Breakpoint="Breakpoint.Sm" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Visitor</MudTh>
+                <MudTh>Time</MudTh>
+                <MudTh>Event Type</MudTh>
+                <MudTh>URL</MudTh>
+                <MudTh>Source</MudTh>
+                <MudTh>Device</MudTh>
+                <MudTh>Browser</MudTh>
+                <MudTh>Location</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Visitor">
+                    <MudTooltip Text="@context.VisitorId">
+                        <MudText Typo="Typo.body2" Style="font-family: monospace;">
+                            @(context.VisitorId.Length > 12 ? context.VisitorId.Substring(0, 12) + "..." : context.VisitorId)
+                        </MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd DataLabel="Time">
+                    <MudText Typo="Typo.body2" Color="@GetTimestampColor(context.Timestamp)">
+                        @(ConvertToLocalTime(context.Timestamp)?.ToString("HH:mm:ss") ?? "N/A")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Color="Color.Secondary">
+                        @GetTimeAgo(context.Timestamp)
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Event Type">
+                    <MudChip T="string" Size="Size.Small" Color="@GetEventTypeColor(context.EventType)">
+                        @context.EventType
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="URL">
+                    <MudTooltip Text="@context.EventUrl">
+                        <MudText Typo="Typo.body2">
+                            @(TruncateUrl(context.EventUrl, 40))
+                        </MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd DataLabel="Source">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.Source</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Device">
+                    @if (context.DeviceType.Contains("Desktop", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Primary" />
+                    }
+                    else if (context.DeviceType.Contains("Mobile", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Smartphone" Size="Size.Small" Color="Color.Success" />
+                    }
+                    else if (context.DeviceType.Contains("Tablet", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.TabletMac" Size="Size.Small" Color="Color.Warning" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Default" />
+                    }
+                    <MudText Typo="Typo.body2" Inline="true" Class="ml-1">@context.DeviceType</MudText>
+                </MudTd>
+                <MudTd DataLabel="Browser">@context.Browser</MudTd>
+                <MudTd DataLabel="Location">
+                    @if (!string.IsNullOrEmpty(context.City) && context.City != "N/A")
+                    {
+                        <MudText Typo="Typo.body2">@context.City, @context.Country</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">@context.Country</MudText>
+                    }
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Activity Summary</MudText>
+        <MudGrid>
+            <MudItem xs="12" md="3">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Total Events</MudText>
+                <MudText Typo="Typo.h5">@_events.Count</MudText>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Active Visitors</MudText>
+                <MudText Typo="Typo.h5">@_events.Select(e => e.VisitorId).Distinct().Count()</MudText>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Active Sessions</MudText>
+                <MudText Typo="Typo.h5">@_events.Select(e => e.SessionId).Distinct().Count()</MudText>
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Event Types</MudText>
+                <MudText Typo="Typo.h5">@_events.Select(e => e.EventType).Distinct().Count()</MudText>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+else
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.body1" Align="Align.Center">
+            No real-time events found for the selected time range
+        </MudText>
+    </MudPaper>
+}

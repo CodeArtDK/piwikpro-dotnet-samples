@@ -1,0 +1,240 @@
+@page "/sessions"
+@using PiwikPROSamples.BlazorSample.Client.Models
+@using PiwikPROSamples.BlazorSample.Client.Services
+
+<PageTitle>Sessions - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Sessions Overview</MudText>
+<MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+    View and analyze raw session data from your website visitors
+</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+<MudPaper Elevation="2" Class="pa-4 mt-4">
+    <MudText Typo="Typo.h6" Class="mb-3">Filter Builder
+        @if (_filters.Any())
+        {
+            <MudChip T="string" Size="Size.Small" Color="Color.Info" Class="ml-2">@_filters.Count active</MudChip>
+        }
+    </MudText>
+    <MudGrid>
+        <MudItem xs="12" sm="4">
+            <MudSelect T="string" @bind-Value="_filterDimension" Label="Dimension" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("source")">Source</MudSelectItem>
+                <MudSelectItem Value="@("medium")">Medium</MudSelectItem>
+                <MudSelectItem Value="@("device_type")">Device Type</MudSelectItem>
+                <MudSelectItem Value="@("browser_name")">Browser</MudSelectItem>
+                <MudSelectItem Value="@("operating_system")">Operating System</MudSelectItem>
+                <MudSelectItem Value="@("location_country_name")">Country</MudSelectItem>
+                <MudSelectItem Value="@("location_city_name")">City</MudSelectItem>
+                <MudSelectItem Value="@("referrer_url")">Referrer URL</MudSelectItem>
+                <MudSelectItem Value="@("campaign_name")">Campaign Name</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudSelect T="string" @bind-Value="_filterOperator" Label="Operator" Variant="Variant.Outlined">
+                <MudSelectItem Value="@("eq")">Equals</MudSelectItem>
+                <MudSelectItem Value="@("neq")">Not Equals</MudSelectItem>
+                <MudSelectItem Value="@("starts_with")">Starts With</MudSelectItem>
+                <MudSelectItem Value="@("ends_with")">Ends With</MudSelectItem>
+                <MudSelectItem Value="@("contains")">Contains</MudSelectItem>
+                <MudSelectItem Value="@("matches")">Matches (regex)</MudSelectItem>
+                <MudSelectItem Value="@("not_matches")">Not Matches (regex)</MudSelectItem>
+            </MudSelect>
+        </MudItem>
+        <MudItem xs="12" sm="3">
+            <MudTextField @bind-Value="_filterValue" Label="Value" Variant="Variant.Outlined" Placeholder="Enter filter value" />
+        </MudItem>
+        <MudItem xs="12" sm="2">
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddFilter" FullWidth="true" Disabled="@(string.IsNullOrWhiteSpace(_filterDimension) || string.IsNullOrWhiteSpace(_filterValue))">
+                <MudIcon Icon="@Icons.Material.Filled.Add" /> Add
+            </MudButton>
+        </MudItem>
+    </MudGrid>
+    
+    @if (_filters.Any())
+    {
+        <MudStack Row="true" Wrap="Wrap.Wrap" Class="mt-3" Spacing="2">
+            @foreach (var filter in _filters)
+            {
+                <MudChip T="string" Color="Color.Primary" OnClose="@(() => RemoveFilter(filter))" Variant="Variant.Filled">
+                    @GetDimensionDisplayName(filter.Dimension) @FilterOperators.GetDisplayName(filter.Operator) "@filter.Value"
+                </MudChip>
+            }
+            <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="ClearFilters" Size="Size.Small">
+                Clear All
+            </MudButton>
+        </MudStack>
+    }
+</MudPaper>
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">
+        @_errorMessage
+    </MudAlert>
+}
+else if (_sessions != null && _sessions.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+            <MudText Typo="Typo.h6">Recent Sessions (@_sessions.Count)
+                @if (_filters.Any())
+                {
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@_filters.Count filter(s) applied</MudChip>
+                }
+            </MudText>
+            <MudStack Row="true" Spacing="2">
+                <MudNumericField @bind-Value="_limit" Label="Limit" Variant="Variant.Outlined" 
+                                 Min="10" Max="1000" Step="10" Style="width: 120px;" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="LoadData">
+                    <MudIcon Icon="@Icons.Material.Filled.Refresh" /> Refresh
+                </MudButton>
+            </MudStack>
+        </MudStack>
+
+        <MudTable Items="@_sessions" Hover="true" Striped="true" Dense="true" 
+                  Breakpoint="Breakpoint.Sm" Loading="@_loading">
+            <HeaderContent>
+                <MudTh>Session ID</MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.Timestamp)" 
+                                       InitialDirection="SortDirection.Descending"
+                                       @onclick="@(() => OnSortChanged("timestamp"))">
+                        Timestamp
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.Source)"
+                                       @onclick="@(() => OnSortChanged("source"))">
+                        Source
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.Medium)"
+                                       @onclick="@(() => OnSortChanged("medium"))">
+                        Medium
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.DeviceType)"
+                                       @onclick="@(() => OnSortChanged("device_type"))">
+                        Device
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.Browser)"
+                                       @onclick="@(() => OnSortChanged("browser_name"))">
+                        Browser
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.OperatingSystem)"
+                                       @onclick="@(() => OnSortChanged("operating_system"))">
+                        OS
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh>
+                    <MudTableSortLabel T="SessionData" SortBy="@(x => x.Country)"
+                                       @onclick="@(() => OnSortChanged("location_country_name"))">
+                        Location
+                    </MudTableSortLabel>
+                </MudTh>
+                <MudTh Style="text-align: right;">Actions</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Session ID">
+                    <MudTooltip Text="@context.SessionId">
+                        <MudText Typo="Typo.body2" Style="font-family: monospace;">
+                            @(context.SessionId.Length > 8 ? context.SessionId.Substring(0, 8) + "..." : context.SessionId)
+                        </MudText>
+                    </MudTooltip>
+                </MudTd>
+                <MudTd DataLabel="Timestamp">
+                    @(context.Timestamp?.ToString("yyyy-MM-dd HH:mm") ?? "N/A")
+                </MudTd>
+                <MudTd DataLabel="Source">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Info">@context.Source</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Medium">
+                    <MudChip T="string" Size="Size.Small" Color="Color.Secondary">@context.Medium</MudChip>
+                </MudTd>
+                <MudTd DataLabel="Device">
+                    @if (context.DeviceType.Contains("Desktop", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Computer" Size="Size.Small" Color="Color.Primary" />
+                    }
+                    else if (context.DeviceType.Contains("Mobile", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Smartphone" Size="Size.Small" Color="Color.Success" />
+                    }
+                    else if (context.DeviceType.Contains("Tablet", StringComparison.OrdinalIgnoreCase))
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.TabletMac" Size="Size.Small" Color="Color.Warning" />
+                    }
+                    else
+                    {
+                        <MudIcon Icon="@Icons.Material.Filled.Devices" Size="Size.Small" Color="Color.Default" />
+                    }
+                    <MudText Typo="Typo.body2" Inline="true" Class="ml-1">@context.DeviceType</MudText>
+                </MudTd>
+                <MudTd DataLabel="Browser">@context.Browser</MudTd>
+                <MudTd DataLabel="OS">@context.OperatingSystem</MudTd>
+                <MudTd DataLabel="Location">
+                    @if (!string.IsNullOrEmpty(context.City) && context.City != "N/A")
+                    {
+                        <MudText Typo="Typo.body2">@context.City, @context.Country</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">@context.Country</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Actions" Style="text-align: right;">
+                    <MudIconButton Icon="@Icons.Material.Filled.Visibility" 
+                                   Color="Color.Primary" 
+                                   Size="Size.Small"
+                                   OnClick="@(() => ShowSessionDetails(context))"
+                                   aria-label="View Details" />
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
+
+    @if (!string.IsNullOrEmpty(_firstSessionCampaign))
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Session Insights</MudText>
+            <MudGrid>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Sessions</MudText>
+                    <MudText Typo="Typo.h5">@_sessions.Count</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Unique Sources</MudText>
+                    <MudText Typo="Typo.h5">@_sessions.Select(s => s.Source).Distinct().Count()</MudText>
+                </MudItem>
+                <MudItem xs="12" md="4">
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Device Types</MudText>
+                    <MudText Typo="Typo.h5">@_sessions.Select(s => s.DeviceType).Distinct().Count()</MudText>
+                </MudItem>
+            </MudGrid>
+        </MudPaper>
+    }
+}
+else
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.body1" Align="Align.Center">
+            No sessions found for the selected date range
+        </MudText>
+    </MudPaper>
+}

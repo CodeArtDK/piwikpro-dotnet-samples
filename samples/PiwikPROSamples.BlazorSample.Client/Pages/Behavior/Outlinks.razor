@@ -1,0 +1,44 @@
+@page "/behavior/outlinks"
+@implements IDisposable
+
+<PageTitle>Outlinks - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Outlinks</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null && _data.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true" QuickFilter="@_quickFilter">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Top Outlinks</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search outlinks..." 
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                              IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x => x.OutlinkUrl" Title="Outlink URL" />
+                <PropertyColumn Property="x => x.Clicks" Title="Clicks" Format="N0" />
+                <PropertyColumn Property="x => x.UniqueClicks" Title="Unique Clicks" Format="N0" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    @if (_trendData != null && _trendData.Any())
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Outlinks Over Time</MudText>
+            <MudChart ChartType="ChartType.Line" 
+                      ChartSeries="@_chartSeries"
+                      XAxisLabels="@_xAxisLabels"
+                      Width="100%" Height="350px" />
+        </MudPaper>
+    }
+}

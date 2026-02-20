@@ -1,0 +1,49 @@
+@page "/visitors/technology"
+@implements IDisposable
+
+<PageTitle>Technology - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Visitor Technology</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null)
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true" QuickFilter="@_quickFilter">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Browser and Device Details</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search..." 
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                              IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x => x.Browser" Title="Browser" />
+                <PropertyColumn Property="x => x.DeviceType" Title="Device Type" />
+                <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+                <TemplateColumn Title="Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="Filter by Browser">
+                            <MudIconButton Icon="@Icons.Material.Filled.FilterAlt" 
+                                         Color="Color.Primary" 
+                                         Size="Size.Small"
+                                         OnClick="@(() => AddBrowserFilter(context.Item))" />
+                        </MudTooltip>
+                        <MudTooltip Text="Filter by Device Type">
+                            <MudIconButton Icon="@Icons.Material.Filled.Devices" 
+                                         Color="Color.Secondary" 
+                                         Size="Size.Small"
+                                         OnClick="@(() => AddDeviceTypeFilter(context.Item))" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+}

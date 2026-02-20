@@ -1,0 +1,44 @@
+@page "/behavior/downloads"
+@implements IDisposable
+
+<PageTitle>Downloads - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Downloads</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null && _data.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true" QuickFilter="@_quickFilter">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Top Downloads</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search downloads..." 
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                              IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x => x.DownloadUrl" Title="Download URL" />
+                <PropertyColumn Property="x => x.Downloads" Title="Downloads" Format="N0" />
+                <PropertyColumn Property="x => x.UniqueDownloads" Title="Unique Downloads" Format="N0" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    @if (_trendData != null && _trendData.Any())
+    {
+        <MudPaper Elevation="2" Class="pa-4 mt-4">
+            <MudText Typo="Typo.h6" GutterBottom="true">Downloads Over Time</MudText>
+            <MudChart ChartType="ChartType.Line" 
+                      ChartSeries="@_chartSeries"
+                      XAxisLabels="@_xAxisLabels"
+                      Width="100%" Height="350px" />
+        </MudPaper>
+    }
+}

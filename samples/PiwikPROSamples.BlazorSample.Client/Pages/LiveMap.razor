@@ -1,0 +1,165 @@
+@page "/livemap"
+@using PiwikPROSamples.BlazorSample.Client.Models
+@using PiwikPROSamples.BlazorSample.Client.Services
+@implements IAsyncDisposable
+
+<PageTitle>Live Traffic Map - PiwikPRO Analytics</PageTitle>
+
+<div class="@(_isFullScreen ? "fullscreen-container" : "")">
+    <MudGrid>
+        <MudItem xs="12" md="@(_selectedPage != null ? 9 : 12)">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack Row="true" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-3">
+                    <MudText Typo="Typo.h4">Live Traffic Map</MudText>
+                    <MudStack Row="true" Spacing="2">
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="ToggleFullScreen">
+                            <MudIcon Icon="@(_isFullScreen ? Icons.Material.Filled.FullscreenExit : Icons.Material.Filled.Fullscreen)" Class="mr-1" />
+                            @(_isFullScreen ? "Exit Full Screen" : "Full Screen")
+                        </MudButton>
+                        <MudButton Variant="Variant.Filled" Color="Color.Default" OnClick="ResetView">
+                            <MudIcon Icon="@Icons.Material.Filled.CenterFocusStrong" Class="mr-1" />
+                            Reset View
+                        </MudButton>
+                    </MudStack>
+                </MudStack>
+
+                @if (_loading)
+                {
+                    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+                    <MudText Typo="Typo.body1" Align="Align.Center">Loading traffic data...</MudText>
+                }
+                else if (!string.IsNullOrEmpty(_errorMessage))
+                {
+                    <MudAlert Severity="Severity.Error" Class="mb-3">@_errorMessage</MudAlert>
+                }
+
+                <div id="live-map-container" class="live-map-container" style="height: @(_isFullScreen ? "calc(100vh - 150px)" : "600px"); width: 100%; border: 1px solid #e0e0e0; border-radius: 4px;">
+                </div>
+
+                <MudPaper Elevation="0" Class="pa-3 mt-3" Style="background-color: #f5f5f5;">
+                    <MudStack Row="true" Wrap="Wrap.Wrap" Spacing="4">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="width: 20px; height: 20px; border-radius: 50%; background-color: #43a047;"></div>
+                            <MudText Typo="Typo.caption">High Traffic (30+ users)</MudText>
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="width: 18px; height: 18px; border-radius: 50%; background-color: #fb8c00;"></div>
+                            <MudText Typo="Typo.caption">Medium Traffic (15-29 users)</MudText>
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="width: 16px; height: 16px; border-radius: 50%; background-color: #757575;"></div>
+                            <MudText Typo="Typo.caption">Low Traffic (1-14 users)</MudText>
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #2196f3;"></div>
+                            <MudText Typo="Typo.caption">Active Users (animated dots)</MudText>
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="width: 20px; height: 2px; background-color: #999;"></div>
+                            <MudText Typo="Typo.caption">Page Hierarchy</MudText>
+                        </MudStack>
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="1">
+                            <div style="width: 20px; height: 2px; background-color: #fb8c00;"></div>
+                            <MudText Typo="Typo.caption">User Funnels</MudText>
+                        </MudStack>
+                    </MudStack>
+                </MudPaper>
+
+                <MudText Typo="Typo.caption" Color="Color.Secondary" Class="mt-2">
+                    Click on a node to view page details. Double-click to expand/collapse child pages. Drag nodes to rearrange. Scroll to zoom.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+
+        @if (_selectedPage != null)
+        {
+            <MudItem xs="12" md="3">
+                <MudPaper Elevation="2" Class="pa-4" Style="@(_isFullScreen ? "position: fixed; right: 16px; top: 80px; width: 320px; max-height: calc(100vh - 100px); overflow-y: auto; z-index: 1000;" : "")">
+                    <MudStack Spacing="3">
+                        <MudText Typo="Typo.h5">Page Details</MudText>
+
+                        <MudDivider />
+
+                        <div>
+                            <MudText Typo="Typo.overline" Color="Color.Secondary">PAGE TITLE</MudText>
+                            <MudText Typo="Typo.body1">@(_selectedPage.PageTitle ?? "Unknown")</MudText>
+                        </div>
+
+                        <div>
+                            <MudText Typo="Typo.overline" Color="Color.Secondary">URL</MudText>
+                            <MudText Typo="Typo.body2" Style="word-break: break-all;">@_selectedPage.PageUrl</MudText>
+                        </div>
+
+                        <MudPaper Elevation="0" Class="pa-3" Style="background-color: #f5f5f5;">
+                            <MudText Typo="Typo.overline" Color="Color.Secondary">Active Users (Now)</MudText>
+                            <MudText Typo="Typo.h3">@_selectedPage.ActiveUsers</MudText>
+                        </MudPaper>
+
+                        <MudPaper Elevation="0" Class="pa-3" Style="background-color: #f5f5f5;">
+                            <MudText Typo="Typo.overline" Color="Color.Secondary">Traffic (Last Hour)</MudText>
+                            <MudText Typo="Typo.h4">@_selectedPage.TrafficLastHour views</MudText>
+                        </MudPaper>
+
+                        @if (_selectedPage.LatestVisitors?.Any() == true)
+                        {
+                            <div>
+                                <MudText Typo="Typo.h6" Class="mb-2">Latest Visitors</MudText>
+                                @foreach (var visitor in _selectedPage.LatestVisitors)
+                                {
+                                    <MudStack Row="true" Justify="Justify.SpaceBetween" Class="mb-2">
+                                        <div>
+                                            <MudText Typo="Typo.body2">@visitor.Location</MudText>
+                                            <MudText Typo="Typo.caption" Color="Color.Primary">@visitor.Source</MudText>
+                                        </div>
+                                        <MudText Typo="Typo.caption" Color="Color.Secondary">@visitor.TimeAgo</MudText>
+                                    </MudStack>
+                                }
+                            </div>
+                        }
+
+                        @if (_selectedPage.TypicalPaths?.Any() == true)
+                        {
+                            <div>
+                                <MudText Typo="Typo.h6" Class="mb-2">Typical Paths</MudText>
+                                @foreach (var path in _selectedPage.TypicalPaths)
+                                {
+                                    <MudText Typo="Typo.body2" Class="mb-1" Style="word-break: break-all;">
+                                        @TruncateUrl(path.From, 30) → @TruncateUrl(path.To, 30)
+                                    </MudText>
+                                }
+                            </div>
+                        }
+
+                        <MudButton Variant="Variant.Outlined" Color="Color.Primary" FullWidth="true"
+                                   Href="@($"/behavior/page-detail?url={Uri.EscapeDataString(_selectedPage.PageUrl)}")">
+                            <MudIcon Icon="@Icons.Material.Filled.OpenInNew" Class="mr-1" />
+                            View Full Details
+                        </MudButton>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</div>
+
+<style>
+    .live-map-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .fullscreen-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 9999;
+        background: white;
+        padding: 16px;
+        overflow: auto;
+    }
+
+    .fullscreen-container .mud-paper {
+        height: 100%;
+    }
+</style>

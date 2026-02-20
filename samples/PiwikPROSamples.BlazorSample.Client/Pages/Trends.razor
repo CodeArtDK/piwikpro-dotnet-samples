@@ -1,0 +1,56 @@
+@page "/trends"
+@implements IDisposable
+
+<PageTitle>Trends - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Analytics Trends</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null && _data.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Sessions and Page Views Over Time</MudText>
+        <MudChart ChartType="ChartType.Line" 
+                  ChartSeries="@_chartSeries"
+                  XAxisLabels="@_xAxisLabels"
+                  Width="100%" Height="400px" />
+    </MudPaper>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Sessions Trend</MudText>
+                <MudChart ChartType="ChartType.Line" 
+                          ChartSeries="@_sessionsSeries"
+                          XAxisLabels="@_xAxisLabels"
+                          Width="100%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Page Views Trend</MudText>
+                <MudChart ChartType="ChartType.Line" 
+                          ChartSeries="@_pageViewsSeries"
+                          XAxisLabels="@_xAxisLabels"
+                          Width="100%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Detailed Data</MudText>
+        <MudDataGrid Items="@_data" Hover="true" Dense="true" SortMode="SortMode.Multiple">
+            <Columns>
+                <PropertyColumn Property="x => x.Date" Title="Date" />
+                <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+                <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+}
+

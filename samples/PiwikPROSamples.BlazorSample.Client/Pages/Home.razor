@@ -1,0 +1,104 @@
+﻿@page "/"
+@implements IDisposable
+
+<PageTitle>Dashboard - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Analytics Dashboard</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (!string.IsNullOrEmpty(_errorMessage))
+{
+    <MudAlert Severity="Severity.Error" Class="mt-4">
+        @_errorMessage
+        <MudText Typo="Typo.body2" Class="mt-2">
+            Please check:
+            <ul>
+                <li>Your API credentials are correct in the active connection settings</li>
+                <li>Your PiwikPRO instance URL is accessible</li>
+                <li>The Website ID is valid</li>
+                <li>Check browser console (F12) for detailed error messages</li>
+            </ul>
+        </MudText>
+    </MudAlert>
+}
+else if (_metrics != null)
+{
+    <MudGrid>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_metrics.TotalSessions.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Sessions</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.PeopleAlt" Color="Color.Primary" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_metrics.TotalPageViews.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Page Views</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Pageview" Color="Color.Info" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_metrics.TotalConversions.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Conversions</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.CheckCircle" Color="Color.Success" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_metrics.BounceRate.ToString("F1")%</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Bounce Rate</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.ExitToApp" Color="Color.Warning" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Traffic Sources</MudText>
+                @if (_acquisitionData != null && _acquisitionData.Any())
+                {
+                    <MudChart ChartType="ChartType.Donut" 
+                              InputData="@_acquisitionData.Select(x => (double)x.Sessions).ToArray()"
+                              InputLabels="@_acquisitionData.Select(x => x.Source).ToArray()"
+                              Width="100%" Height="300px" />
+                }
+                else
+                {
+                    <MudText>No data available</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Trends</MudText>
+                @if (_trendData != null && _trendData.Any())
+                {
+                    <MudChart ChartType="ChartType.Line" 
+                              ChartSeries="@_chartSeries"
+                              XAxisLabels="@_xAxisLabels"
+                              Width="100%" Height="300px" />
+                }
+                else
+                {
+                    <MudText>No data available</MudText>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

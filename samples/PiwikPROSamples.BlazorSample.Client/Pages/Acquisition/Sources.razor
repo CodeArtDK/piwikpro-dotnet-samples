@@ -1,0 +1,45 @@
+@page "/acquisition/sources"
+@implements IDisposable
+
+<PageTitle>Traffic Sources - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Traffic Sources</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null && _data.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true">
+            <Columns>
+                <PropertyColumn Property="x => x.Source" Title="Source" />
+                <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+                <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+                <PropertyColumn Property="x => x.BounceRate" Title="Bounce Rate %" Format="F1" />
+                <TemplateColumn Title="Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="Add as filter">
+                            <MudIconButton Icon="@Icons.Material.Filled.FilterAlt" 
+                                         Color="Color.Primary" 
+                                         Size="Size.Small"
+                                         OnClick="@(() => AddSourceFilter(context.Item))" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Sessions by Source</MudText>
+        <MudChart ChartType="ChartType.Bar" 
+                  ChartSeries="@_barChartSeries"
+                  XAxisLabels="@_xAxisLabels"
+                  Width="100%" Height="350px" />
+    </MudPaper>
+}

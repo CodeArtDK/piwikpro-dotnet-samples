@@ -1,0 +1,56 @@
+@page "/goals/conversions"
+
+<PageTitle>Conversions - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Conversions</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null)
+{
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_totalConversions.ToString("N0")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Total Conversions</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.TrendingUp" Color="Color.Success" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_avgConversionRate.ToString("P2")</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Avg. Conversion Rate</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.Percent" Color="Color.Info" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="4">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudStack>
+                    <MudText Typo="Typo.h3">@_data.Count</MudText>
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">Data Points</MudText>
+                    <MudIcon Icon="@Icons.Material.Filled.DataUsage" Color="Color.Primary" Size="Size.Large" />
+                </MudStack>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Conversion Details</MudText>
+        <MudDataGrid Items="@_data" Hover="true" Dense="true" SortMode="SortMode.Multiple">
+            <Columns>
+                <PropertyColumn Property="x => x.Date" Title="Date" />
+                <PropertyColumn Property="x => x.Conversions" Title="Conversions" Format="N0" />
+                <PropertyColumn Property="x => x.ConversionRate" Title="Conversion Rate" Format="P2" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+}
+

@@ -1,0 +1,6 @@
+@PiwikPRO.Analytics.Browser.Server_HostAddress = http://localhost:5272
+
+GET {{PiwikPRO.Analytics.Browser.Server_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

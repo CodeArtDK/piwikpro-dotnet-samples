@@ -1,0 +1,49 @@
+@page "/visitors/overview"
+@implements IDisposable
+
+<PageTitle>Visitors Overview - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Visitors Overview</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null)
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Visitor Technology</MudText>
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true">
+            <Columns>
+                <PropertyColumn Property="x => x.Browser" Title="Browser" />
+                <PropertyColumn Property="x => x.DeviceType" Title="Device Type" />
+                <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Sessions by Browser</MudText>
+                <MudChart ChartType="ChartType.Pie" 
+                          InputData="@_data.GroupBy(x => x.Browser).Select(g => (double)g.Sum(x => x.Sessions)).ToArray()"
+                          InputLabels="@_data.GroupBy(x => x.Browser).Select(g => g.Key).ToArray()"
+                          Width="100%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Sessions by Device Type</MudText>
+                <MudChart ChartType="ChartType.Donut" 
+                          InputData="@_data.GroupBy(x => x.DeviceType).Select(g => (double)g.Sum(x => x.Sessions)).ToArray()"
+                          InputLabels="@_data.GroupBy(x => x.DeviceType).Select(g => g.Key).ToArray()"
+                          Width="100%" Height="300px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}
+

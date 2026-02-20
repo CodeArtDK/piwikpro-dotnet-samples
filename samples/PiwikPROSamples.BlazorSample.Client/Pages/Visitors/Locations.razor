@@ -1,0 +1,65 @@
+@page "/visitors/locations"
+@implements IDisposable
+
+<PageTitle>Visitor Locations - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Visitor Locations</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null && _data.Any())
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true" QuickFilter="@_quickFilter">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Visitors by Country</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search..." 
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                              IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <Columns>
+                <PropertyColumn Property="x => x.Country" Title="Country" />
+                <PropertyColumn Property="x => x.Sessions" Title="Sessions" Format="N0" />
+                <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+                <PropertyColumn Property="x => x.BounceRate" Title="Bounce Rate %" Format="F1" />
+                <TemplateColumn Title="Actions" Sortable="false">
+                    <CellTemplate>
+                        <MudTooltip Text="Add as filter">
+                            <MudIconButton Icon="@Icons.Material.Filled.FilterAlt" 
+                                         Color="Color.Primary" 
+                                         Size="Size.Small"
+                                         OnClick="@(() => AddCountryFilter(context.Item))" />
+                        </MudTooltip>
+                    </CellTemplate>
+                </TemplateColumn>
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+
+    <MudGrid Class="mt-4">
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Top 10 Countries by Sessions</MudText>
+                <MudChart ChartType="ChartType.Bar" 
+                          ChartSeries="@_barChartSeries"
+                          XAxisLabels="@_xAxisLabels"
+                          Width="100%" Height="350px" />
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="pa-4">
+                <MudText Typo="Typo.h6" GutterBottom="true">Sessions Distribution</MudText>
+                <MudChart ChartType="ChartType.Pie" 
+                          InputData="@_data.Take(10).Select(x => (double)x.Sessions).ToArray()"
+                          InputLabels="@_data.Take(10).Select(x => x.Country).ToArray()"
+                          Width="100%" Height="350px" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

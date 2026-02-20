@@ -1,0 +1,112 @@
+@page "/add-connection"
+@page "/add-connection/{ConnectionId}"
+@using PiwikPROSamples.BlazorSample.Client.Models
+@using PiwikPROSamples.BlazorSample.Client.Services
+@inject IConnectionStateService ConnectionStateService
+@inject NavigationManager NavigationManager
+@inject ISnackbar Snackbar
+
+<PageTitle>@(IsEditing ? "Edit Connection" : "Add Connection") - PiwikPRO Analytics</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-4">
+    @if (!_hasExistingConnections && !IsEditing)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-4">
+            <MudText Typo="Typo.body1">
+                <strong>Welcome to PiwikPRO Analytics!</strong>
+            </MudText>
+            <MudText Typo="Typo.body2">
+                To get started, please configure a connection to your PiwikPRO instance.
+            </MudText>
+        </MudAlert>
+    }
+    <MudPaper Elevation="2" Class="pa-6">
+        <MudText Typo="Typo.h4" GutterBottom="true">@(IsEditing ? "Edit Connection" : "Add Connection")</MudText>
+        <MudText Typo="Typo.body2" Class="mb-4">
+            @if (IsEditing)
+            {
+                <text>Update your PiwikPRO connection settings.</text>
+            }
+            else
+            {
+                <text>Configure your PiwikPRO connection to start analyzing your data.</text>
+            }
+        </MudText>
+
+        <MudForm @ref="_form" @bind-IsValid="@_isValid">
+            <MudTextField 
+                @bind-Value="_connection.Name" 
+                Label="Connection Name" 
+                Variant="Variant.Outlined" 
+                Required="true"
+                RequiredError="Connection name is required"
+                Class="mb-4" />
+
+            <MudTextField 
+                @bind-Value="_connection.BaseUrl" 
+                Label="Base URL" 
+                Variant="Variant.Outlined" 
+                Required="true"
+                RequiredError="Base URL is required"
+                HelperText="Example: https://example.piwik.pro"
+                Class="mb-4" />
+
+            <MudTextField 
+                @bind-Value="_connection.ClientId" 
+                Label="Client ID" 
+                Variant="Variant.Outlined" 
+                Required="true"
+                RequiredError="Client ID is required"
+                Class="mb-4" />
+
+            <MudTextField 
+                @bind-Value="_connection.ClientSecret" 
+                Label="Client Secret" 
+                Variant="Variant.Outlined" 
+                Required="true"
+                RequiredError="Client Secret is required"
+                InputType="InputType.Password"
+                Class="mb-4" />
+
+            <MudTextField 
+                @bind-Value="_connection.WebSiteId" 
+                Label="Website ID" 
+                Variant="Variant.Outlined" 
+                HelperText="Optional - can be left empty if not known yet"
+                Class="mb-4" />
+
+            <MudCheckBox 
+                @bind-Value="_connection.IsDefault" 
+                Label="Set as default connection"
+                Color="Color.Primary"
+                Class="mb-4" />
+
+            <MudStack Row="true" Spacing="2" Class="mt-4">
+                <MudButton 
+                    Variant="Variant.Filled" 
+                    Color="Color.Primary" 
+                    OnClick="SaveConnection"
+                    Disabled="!_isValid || _saving">
+                    @if (_saving)
+                    {
+                        <MudProgressCircular Class="mr-2" Size="Size.Small" Indeterminate="true" />
+                        <MudText>Saving...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>Save Connection</MudText>
+                    }
+                </MudButton>
+                @if (_hasExistingConnections)
+                {
+                    <MudButton 
+                        Variant="Variant.Outlined" 
+                        Color="Color.Default" 
+                        OnClick="Cancel">
+                        Cancel
+                    </MudButton>
+                }
+            </MudStack>
+        </MudForm>
+    </MudPaper>
+</MudContainer>

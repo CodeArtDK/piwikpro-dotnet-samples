@@ -1,0 +1,33 @@
+@using PiwikPROSamples.BlazorSample.Client.Services
+@inject IConnectionStateService ConnectionStateService
+@inject NavigationManager NavigationManager
+
+<Router AppAssembly="@typeof(App).Assembly">
+    <Found Context="routeData">
+        <RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+        <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+    </Found>
+    <NotFound>
+        <PageTitle>Not found</PageTitle>
+        <LayoutView Layout="@typeof(MainLayout)">
+            <p role="alert">Sorry, there's nothing at this address.</p>
+        </LayoutView>
+    </NotFound>
+</Router>
+
+@code {
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var hasConnection = await ConnectionStateService.HasActiveConnectionAsync();
+            var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+            
+            // Redirect to add-connection if no connection exists and not already on that page or settings
+            if (!hasConnection && currentPath != "/add-connection" && currentPath != "/settings")
+            {
+                NavigationManager.NavigateTo("/add-connection");
+            }
+        }
+    }
+}

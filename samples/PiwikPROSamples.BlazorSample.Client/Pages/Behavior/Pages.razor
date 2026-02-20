@@ -1,0 +1,39 @@
+@page "/behavior/pages"
+@implements IDisposable
+
+<PageTitle>Pages - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Page Behavior</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else if (_data != null)
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudDataGrid Items="@_data" Filterable="true" SortMode="SortMode.Multiple" 
+                     Hover="true" Dense="true" QuickFilter="@_quickFilter">
+            <ToolBarContent>
+                <MudText Typo="Typo.h6">Top Pages</MudText>
+                <MudSpacer />
+                <MudTextField @bind-Value="_searchString" Placeholder="Search pages..." 
+                              Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" 
+                              IconSize="Size.Medium" Class="mt-0" />
+            </ToolBarContent>
+            <Columns>
+                <TemplateColumn Title="Page URL">
+                    <CellTemplate>
+                        <MudLink Href="@($"/behavior/page-detail?url={Uri.EscapeDataString(context.Item.PageUrl)}")" Color="Color.Primary">
+                            @context.Item.PageUrl
+                        </MudLink>
+                    </CellTemplate>
+                </TemplateColumn>
+                <PropertyColumn Property="x => x.PageViews" Title="Page Views" Format="N0" />
+                <PropertyColumn Property="x => x.UniquePageViews" Title="Unique Page Views" Format="N0" />
+            </Columns>
+        </MudDataGrid>
+    </MudPaper>
+}

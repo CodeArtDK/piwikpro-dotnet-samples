@@ -1,0 +1,36 @@
+﻿<MudNavMenu>
+    <MudNavLink Href="/" Icon="@Icons.Material.Filled.Dashboard" IconColor="Color.Primary">Dashboard</MudNavLink>
+    
+    <MudNavGroup Title="Real Time Traffic" Icon="@Icons.Material.Filled.FlashOn" IconColor="Color.Error" Expanded="true">
+        <MudNavLink Href="/livemap" Icon="@Icons.Material.Filled.AccountTree">Live Map</MudNavLink>
+        <MudNavLink Href="/realtime" Icon="@Icons.Material.Filled.Stream">Real-Time Events</MudNavLink>
+    </MudNavGroup>
+    
+    <MudNavGroup Title="Acquisition" Icon="@Icons.Material.Filled.TrendingUp" IconColor="Color.Secondary" Expanded="false">
+        <MudNavLink Href="/acquisition/sources" Icon="@Icons.Material.Filled.Source">Traffic Sources</MudNavLink>
+        <MudNavLink Href="/acquisition/channels" Icon="@Icons.Material.Filled.MultipleStop">Channels</MudNavLink>
+        <MudNavLink Href="/acquisition/campaigns" Icon="@Icons.Material.Filled.Campaign">Campaigns</MudNavLink>
+    </MudNavGroup>
+    
+    <MudNavGroup Title="Behavior" Icon="@Icons.Material.Filled.Pages" IconColor="Color.Info" Expanded="false">
+        <MudNavLink Href="/behavior/pages" Icon="@Icons.Material.Filled.Article">Pages</MudNavLink>
+        <MudNavLink Href="/behavior/events" Icon="@Icons.Material.Filled.Event">Events</MudNavLink>
+        <MudNavLink Href="/behavior/outlinks" Icon="@Icons.Material.Filled.OpenInNew">Outlinks</MudNavLink>
+        <MudNavLink Href="/behavior/downloads" Icon="@Icons.Material.Filled.Download">Downloads</MudNavLink>
+    </MudNavGroup>
+    
+    <MudNavGroup Title="Visitors" Icon="@Icons.Material.Filled.People" IconColor="Color.Success" Expanded="false">
+        <MudNavLink Href="/visitors/overview" Icon="@Icons.Material.Filled.Summarize">Overview</MudNavLink>
+        <MudNavLink Href="/visitors/technology" Icon="@Icons.Material.Filled.DevicesOther">Technology</MudNavLink>
+        <MudNavLink Href="/visitors/locations" Icon="@Icons.Material.Filled.LocationOn">Locations</MudNavLink>
+        <MudNavLink Href="/visitors/engagement" Icon="@Icons.Material.Filled.Timer">Engagement</MudNavLink>
+        <MudNavLink Href="/sessions" Icon="@Icons.Material.Filled.AccessTime">Sessions</MudNavLink>
+    </MudNavGroup>
+    
+    <MudNavGroup Title="Goals" Icon="@Icons.Material.Filled.Flag" IconColor="Color.Warning" Expanded="false">
+        <MudNavLink Href="/goals/overview" Icon="@Icons.Material.Filled.Analytics">Overview</MudNavLink>
+        <MudNavLink Href="/goals/conversions" Icon="@Icons.Material.Filled.CheckCircle">Conversions</MudNavLink>
+    </MudNavGroup>
+    
+    <MudNavLink Href="/trends" Icon="@Icons.Material.Filled.ShowChart" IconColor="Color.Tertiary">Trends</MudNavLink>
+</MudNavMenu>

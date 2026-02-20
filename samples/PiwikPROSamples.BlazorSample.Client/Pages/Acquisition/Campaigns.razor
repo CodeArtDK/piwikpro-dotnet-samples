@@ -1,0 +1,21 @@
+@page "/acquisition/campaigns"
+
+<PageTitle>Campaigns - PiwikPRO Analytics</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Campaigns</MudText>
+
+<DateRangePicker OnDateRangeChanged="OnDateRangeChanged" />
+
+@if (_loading)
+{
+    <MudProgressLinear Color="Color.Primary" Indeterminate="true" Class="my-4" />
+}
+else
+{
+    <MudPaper Elevation="2" Class="pa-4 mt-4">
+        <MudText Typo="Typo.h6" GutterBottom="true">Campaign Performance</MudText>
+        <MudAlert Severity="Severity.Info">
+            Campaign data will be available when campaign tracking is configured in your PiwikPRO instance.
+        </MudAlert>
+    </MudPaper>
+}

@@ -1,0 +1,94 @@
+﻿@inherits LayoutComponentBase
+@using PiwikPROSamples.BlazorSample.Client.Services
+@using AppModel = PiwikPRO.Analytics.Models.Apps.App
+@inject IAppSelectorService AppSelectorService
+
+<MudThemeProvider Theme="_customTheme" />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1" Dense="true">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@ToggleDrawer" />
+        <MudText Typo="Typo.h6" Class="ml-3">PiwikPRO Analytics</MudText>
+        <MudSpacer />
+        @if (_apps.Any())
+        {
+            <MudSelect T="string" 
+                       Value="@_selectedAppId" 
+                       ValueChanged="@OnAppSelectionChanged"
+                       Label="App" 
+                       Variant="Variant.Outlined" 
+                       Margin="Margin.Dense"
+                       Class="mr-4"
+                       Style="min-width: 200px; background-color: rgba(255,255,255,0.1);">
+                <MudSelectItem T="string" Value="@((string?)null)">Default (Config)</MudSelectItem>
+                @foreach (var app in _apps)
+                {
+                    <MudSelectItem T="string" Value="@app.Id">@app.Attributes.Name</MudSelectItem>
+                }
+            </MudSelect>
+        }
+        <MudText Typo="Typo.body2" Class="mr-4">@DateTime.Now.ToString("MMM dd, yyyy")</MudText>
+        <MudIconButton Icon="@Icons.Material.Filled.Settings" Color="Color.Inherit" Href="/settings" title="Settings" />
+    </MudAppBar>
+    <MudDrawer @bind-Open="_drawerOpen" Elevation="2" ClipMode="DrawerClipMode.Always">
+        <NavMenu />
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge" Class="mt-4 mb-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private List<AppModel> _apps = new();
+    private string? _selectedAppId;
+    
+    private readonly MudTheme _customTheme = new()
+    {
+        PaletteLight = new PaletteLight
+        {
+            Primary = "#0d47a1",
+            Secondary = "#1976d2",
+            AppbarBackground = "#0d47a1",
+            Background = "#f5f5f5",
+            Surface = "#ffffff",
+            DrawerBackground = "#ffffff",
+            DrawerText = "rgba(0,0,0, 0.87)",
+            Success = "#43a047"
+        },
+        PaletteDark = new PaletteDark
+        {
+            Primary = "#2196f3",
+            Secondary = "#64b5f6",
+            AppbarBackground = "#1e1e1e",
+            Background = "#121212",
+            Surface = "#1e1e1e",
+            DrawerBackground = "#1e1e1e",
+            DrawerText = "rgba(255,255,255, 0.87)",
+            Success = "#66bb6a"
+        }
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _apps = await AppSelectorService.GetAppsAsync();
+        _selectedAppId = AppSelectorService.GetSelectedAppId();
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private async Task OnAppSelectionChanged(string? newAppId)
+    {
+        await AppSelectorService.SetSelectedAppAsync(newAppId);
+        _selectedAppId = newAppId;
+        StateHasChanged();
+    }
+}
