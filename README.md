@@ -75,6 +75,7 @@ dotnet build samples/PiwikPROSamples.ConsoleSample
 
 ## Getting Your Credentials
 
+[Get a Piwik PRO trial here](https://piwik.pro/business-plan/)
 1. Log into your Piwik PRO account
 2. Go to **Menu > Profile > API Keys** or **Settings > API**
 3. Create a new API client (or use an existing one)
