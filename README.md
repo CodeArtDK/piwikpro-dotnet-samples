@@ -5,7 +5,8 @@ Sample applications demonstrating how to use the [Piwik PRO .NET SDK](https://ww
 ## Prerequisites
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0) or later
-- A Piwik PRO account with API access (Client ID, Client Secret, and Website ID)
+- A Piwik PRO account with API access (Client ID, Client Secret, and Website ID). [Get a Piwik PRO trial here](https://piwik.pro/business-plan/?utm_campaign=codeart)
+
 
 ## Samples
 
